@@ -33,10 +33,15 @@
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
+    // Create marker and circle objects once
+    var marker = L.marker([0, 0]).addTo(map);
+    var circle = L.circle([0, 0], 0).addTo(map);
+
     function onLocationFound(e) {
         var radius = e.accuracy / 2;
-        L.marker(e.latlng).addTo(map);
-        L.circle(e.latlng, radius).addTo(map);
+        marker.setLatLng(e.latlng);  // Update the position of the marker
+        circle.setLatLng(e.latlng);  // Update the position of the circle
+        circle.setRadius(radius);    // Update the radius of the circle
     }
 
     function onLocationError(e) {
