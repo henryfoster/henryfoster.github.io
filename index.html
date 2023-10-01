@@ -19,7 +19,7 @@
 
 <div id="map"></div>
 
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-rotate-map@0.3.0/leaflet-src.min.js"></script>
 <script>
     function getQueryParameter(name) {
         var params = new URLSearchParams(window.location.search);
@@ -28,7 +28,7 @@
 
     var tileUrl = getQueryParameter('tileUrl');
 
-    var map = L.map('map').fitWorld();
+    var map = L.map('map', {rotate: true}).fitWorld();
     L.tileLayer(tileUrl, {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
