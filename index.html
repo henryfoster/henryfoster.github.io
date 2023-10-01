@@ -36,14 +36,45 @@
     // Create marker and circle objects once
     var marker = L.marker([0, 0]).addTo(map);
     var circle = L.circle([0, 0], 0).addTo(map);
+    var prevLocation = null;
 
     function onLocationFound(e) {
         var radius = e.accuracy / 2;
-        marker.setLatLng(e.latlng);  // Update the position of the marker
-        circle.setLatLng(e.latlng);  // Update the position of the circle
-        circle.setRadius(radius);    // Update the radius of the circle
+
+        // Calculate the angle if there is a previous location
+        var angle = 0;
+        if (prevLocation) {
+            angle = calculateAngle(prevLocation, e.latlng);
+        }
+        
+        // Create a triangle icon with the calculated angle
+        var triangleIcon = L.divIcon({
+            className: 'triangle-icon',
+            iconSize: [30, 50],  // Adjust the icon size
+            html: '<div style="width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 50px solid green; transform: rotate(' + angle + 'deg);"></div>'
+        });
+        
+        // Update the marker with the new icon
+        marker.setIcon(triangleIcon);
+        
+        // Update the marker and circle positions
+        marker.setLatLng(e.latlng);
+        circle.setLatLng(e.latlng);
+        circle.setRadius(radius);
+        
+        // Update the previous location with the current location
+        prevLocation = e.latlng;
+
         map.panTo(e.latlng);
     }
+
+function calculateAngle(prevLatLng, currLatLng) {
+    var dy = currLatLng.lat - prevLatLng.lat;
+    var dx = Math.cos(Math.PI / 180 * prevLatLng.lat) * (currLatLng.lng - prevLatLng.lng);
+    var theta = Math.atan2(dy, dx);
+    var angle = (theta * 180 / Math.PI + 360) % 360;
+    return angle;
+}
 
     function onLocationError(e) {
         console.log(e.message);
@@ -58,6 +89,7 @@
 
     function decodeBase64ToObject(base64String) {
         try {
+            console.log(base64String)
             // Step 1: Decode the Base64 string
             let decodedString = atob(base64String);
 
