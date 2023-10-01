@@ -19,7 +19,7 @@
 
 <div id="map"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/leaflet-rotate-map@0.3.0/leaflet-src.min.js"></script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
     function getQueryParameter(name) {
         var params = new URLSearchParams(window.location.search);
@@ -50,7 +50,7 @@
         // Create a triangle icon with the calculated angle
         var triangleIcon = L.divIcon({
             className: 'triangle-icon',
-            iconSize: [30, 50],  // Adjust the icon size
+            iconSize: [10, 20],  // Adjust the icon size
             html: '<div style="width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 50px solid green; transform: rotate(' + angle + 'deg);"></div>'
         });
         
