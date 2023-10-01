@@ -42,6 +42,7 @@
         marker.setLatLng(e.latlng);  // Update the position of the marker
         circle.setLatLng(e.latlng);  // Update the position of the circle
         circle.setRadius(radius);    // Update the radius of the circle
+        map.panTo(e.latlng);
     }
 
     function onLocationError(e) {
@@ -51,7 +52,7 @@
     map.on('locationfound', onLocationFound);
     map.on('locationerror', onLocationError);
 
-    map.locate({setView: true, watch: true});
+    map.locate({watch: true});
 
     var dataString = getQueryParameter('data');
 
