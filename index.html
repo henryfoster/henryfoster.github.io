@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mobile Fullscreen Leaflet Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+    function getQueryParameter(name) {
+        var params = new URLSearchParams(window.location.search);
+        return params.get(name);
+    }
+
+    var tileUrl = getQueryParameter('tileUrl');
+
+    var map = L.map('map').fitWorld();
+    L.tileLayer(tileUrl, {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    function onLocationFound(e) {
+        var radius = e.accuracy / 2;
+        L.marker(e.latlng).addTo(map);
+        L.circle(e.latlng, radius).addTo(map);
+    }
+
+    function onLocationError(e) {
+        alert(e.message);
+    }
+
+    map.on('locationfound', onLocationFound);
+    map.on('locationerror', onLocationError);
+
+    map.locate({setView: true, watch: true});
+
+    var dataString = getQueryParameter('data');
+
+    function decodeBase64ToObject(base64String) {
+        try {
+            // Step 1: Decode the Base64 string
+            let decodedString = atob(base64String);
+
+            // Step 2: Parse the string into an object
+            let jsonObject = JSON.parse(decodedString);
+
+            return jsonObject;
+        } catch (error) {
+            // Handle any errors that occur
+            console.error('Error decoding Base64 string or parsing JSON:', error);
+            return null;
+        }
+    }
+    const data = decodeBase64ToObject(dataString);
+
+    function decodePolyline(encoded) {
+        var len = encoded.length;
+        var index = 0;
+        var array = [];
+        var lat = 0;
+        var lng = 0;
+
+        while (index < len) {
+            var b, shift = 0,
+                result = 0;
+            do {
+                b = encoded.charCodeAt(index++) - 63;
+                result |= (b & 0x1f) << shift;
+                shift += 5;
+            } while (b >= 0x20);
+            var dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
+            lat += dlat;
+
+            shift = 0;
+            result = 0;
+            do {
+                b = encoded.charCodeAt(index++) - 63;
+                result |= (b & 0x1f) << shift;
+                shift += 5;
+            } while (b >= 0x20);
+            var dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
+            lng += dlng;
+
+            array.push([lat * 1e-5, lng * 1e-5]);
+        }
+
+        return array;
+    }
+
+    data.waypoints.forEach(function(position) {
+        [position[1], position[0]] = [position[0], position[1]];
+        var marker = L.marker(position, {
+            draggable: false
+        }).addTo(map);
+    });
+
+    var polyline = decodePolyline(data.route);
+    L.polyline(polyline).addTo(map);
+
+</script>
+
+</body>
+</html>
