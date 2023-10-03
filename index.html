@@ -28,53 +28,19 @@
 
     var tileUrl = getQueryParameter('tileUrl');
 
-    var map = L.map('map', {rotate: true}).fitWorld();
+    var map = L.map('map', { rotate: true }).fitWorld().setZoom(18); 
     L.tileLayer(tileUrl, {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // Create marker and circle objects once
-    var marker = L.marker([0, 0]).addTo(map);
-    var circle = L.circle([0, 0], 0).addTo(map);
-    var prevLocation = null;
+    var circle = L.circle([0, 0], { color: 'green' }).addTo(map);
 
     function onLocationFound(e) {
         var radius = e.accuracy / 2;
-
-        // Calculate the angle if there is a previous location
-        var angle = 0;
-        if (prevLocation) {
-            angle = calculateAngle(prevLocation, e.latlng);
-        }
-        
-        // Create a triangle icon with the calculated angle
-        var triangleIcon = L.divIcon({
-            className: 'triangle-icon',
-            iconSize: [10, 20],  // Adjust the icon size
-            html: '<div style="width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 50px solid green; transform: rotate(' + angle + 'deg);"></div>'
-        });
-        
-        // Update the marker with the new icon
-        marker.setIcon(triangleIcon);
-        
-        // Update the marker and circle positions
-        marker.setLatLng(e.latlng);
         circle.setLatLng(e.latlng);
         circle.setRadius(radius);
-        
-        // Update the previous location with the current location
-        prevLocation = e.latlng;
-
         map.panTo(e.latlng);
     }
-
-function calculateAngle(prevLatLng, currLatLng) {
-    var dy = currLatLng.lat - prevLatLng.lat;
-    var dx = Math.cos(Math.PI / 180 * prevLatLng.lat) * (currLatLng.lng - prevLatLng.lng);
-    var theta = Math.atan2(dy, dx);
-    var angle = (theta * 180 / Math.PI + 360) % 360;
-    return angle;
-}
 
     function onLocationError(e) {
         console.log(e.message);
@@ -149,6 +115,63 @@ function calculateAngle(prevLatLng, currLatLng) {
     var polyline = decodePolyline(data.route);
     L.polyline(polyline).addTo(map);
 
+    var DownloadGPXControl = L.Control.extend({
+        onAdd: function(map) {
+            var btn = document.createElement('button');
+            btn.innerHTML = 'Download GPX';
+            btn.className = 'leaflet-bar'; // Use Leaflet's style
+
+            btn.onclick = function() {
+                var gpxData = generateGPX(data.waypoints, polyline);
+                downloadGPX(gpxData);
+            };
+
+            return btn;
+        },
+
+        onRemove: function(map) {
+            // Nothing to do here
+        }
+    });
+
+// Add the control to the map
+var downloadGPXControl = new DownloadGPXControl({ position: 'topright' });
+map.addControl(downloadGPXControl);
+
+    function generateGPX(waypoints, route) {
+        var gpx = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+            '<gpx version="1.1" creator="YourAppName">\n';
+
+        // Add waypoints
+        waypoints.forEach(function(position) {
+            gpx += '<wpt lat="' + position[0] + '" lon="' + position[1] + '">\n';
+            gpx += '<name>Waypoint Name</name>\n'; // You can modify this to set a name
+            gpx += '</wpt>\n';
+        });
+
+        // Add route
+        gpx += '<trk>\n';
+        gpx += '<name>Route Name</name>\n'; // Modify this as needed
+        gpx += '<trkseg>\n';
+        route.forEach(function(point) {
+            gpx += '<trkpt lat="' + point[0] + '" lon="' + point[1] + '"></trkpt>\n';
+        });
+        gpx += '</trkseg>\n';
+        gpx += '</trk>\n';
+        gpx += '</gpx>';
+
+        return gpx;
+    }
+
+    function downloadGPX(data) {
+        var blob = new Blob([data], { type: 'text/xml' });
+        var url = window.URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'route.gpx';
+        a.click();
+        window.URL.revokeObjectURL(url);
+    }
 </script>
 
 </body>
